@@ -1,26 +1,27 @@
-from flask import Flask, render_template_string
+from flask import Flask, render_template_string, request, redirect, url_for
+import json
 
 app = Flask(__name__)
 
-piket_per_hari = {
-    "Selasa": [
-        "Nurul Agustina", "NORA SYUHADA", "Muhammad Alfitrah", "Muhammad Abil",
-        "ZACHRA ALMIRA APRILLA", "Muhammad Rizki", "Taufik Muhaimin"
-    ],
-    "Rabu": [
-        "TRI KUMALA SARI", "Nurul Afiqah Simbolon", "Sunil Hukmi", "Andrian Fakhruza",
-        "Mulyani", "Rizki Ananda", "AFIIFA LHOKSEUM DWI PUTRI"
-    ],
-    "Kamis": [
-        "Vidya Ayu Ningtyas", "Muhammad Rafli Aulia", "AURA SYASKIA", "ZAMHUR",
-        "CUT EVANA SALSABILA", "CUT SITI SARAH AZKIANI", "Muhammad Rafli"
-    ],
-    "Jumat": [
-        "Teuku Aldie Aulia", "CUT RAYSHA", "Dimas Kurniawan", "Fachrul Rozi Rangkuti",
-        "Febri Fanisa", "Sultan Juanda Al Muttaqin"
-    ]
-}
+# Load data dari file JSON (jika ada)
+try:
+    with open("piket_data.json", "r") as f:
+        piket_per_hari = json.load(f)
+except FileNotFoundError:
+    # Data awal kosong
+    piket_per_hari = {
+        "Selasa": [],
+        "Rabu": [],
+        "Kamis": [],
+        "Jumat": []
+    }
 
+# Simpan ke file JSON
+def save_data():
+    with open("piket_data.json", "w") as f:
+        json.dump(piket_per_hari, f)
+
+# Halaman Utama
 TEMPLATE = """
 <!DOCTYPE html>
 <html lang="id">
@@ -28,122 +29,17 @@ TEMPLATE = """
     <meta charset="UTF-8">
     <title>Jadwal Piket Interaktif</title>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #ffe0f0, #d3cce3);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 40px 20px;
-            box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.2);
-            overflow-x: hidden;
-        }
-        h1 {
-            color: #5c2a9d;
-            margin-bottom: 30px;
-            text-shadow: 2px 2px 6px rgba(0,0,0,0.2);
-            animation: fadeSlide 1s ease-out;
-        }
-        .btn {
-            background-color: #b36bff;
-            color: white;
-            padding: 15px 25px;
-            margin: 10px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            font-size: 18px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            animation: bounceIn 0.6s ease forwards;
-            position: relative;
-            overflow: hidden;
-        }
-        .btn:hover {
-            animation: pulse 0.6s;
-            transform: translateY(-3px) scale(1.08);
-            box-shadow: 0 8px 16px rgba(0,0,0,0.25);
-        }
-        .btn:active::after {
-            content: '';
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-            animation: bubble 0.5s ease-out;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 0;
-        }
-        .btn span {
-            position: relative;
-            z-index: 1;
-        }
-        .jadwal {
-            display: none;
-            opacity: 0;
-            transform: scale(0.95);
-            margin-top: 30px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-            max-width: 500px;
-            width: 100%;
-            animation: fadeZoom 0.6s ease forwards;
-        }
-        .jadwal h3 {
-            margin-top: 0;
-            color: #5c2a9d;
-            text-align: center;
-        }
-        ul {
-            padding-left: 20px;
-            text-align: left;
-        }
-        li {
-            margin: 5px 0;
-            font-size: 16px;
-        }
-
-        .back-btn {
-            margin-top: 20px;
-            background-color: #ff85b3;
-        }
-
-        @keyframes fadeSlide {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeZoom {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes bounceIn {
-            0% { transform: scale(0.9); opacity: 0; }
-            60% { transform: scale(1.05); opacity: 1; }
-            100% { transform: scale(1); }
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-        @keyframes bubble {
-            from {
-                transform: translate(-50%, -50%) scale(0);
-                opacity: 0.8;
-            }
-            to {
-                transform: translate(-50%, -50%) scale(1.5);
-                opacity: 0;
-            }
-        }
+        body { font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; flex-direction: column; min-height: 100vh; margin: 0; background: linear-gradient(135deg, #d4bfff, #fbeaff); transition: background 0.5s ease; }
+        h1 { color: #5c2a9d; margin-bottom: 30px; text-align: center; animation: fadeInDown 0.7s ease-out; }
+        .btn { background-color: #b36bff; color: white; padding: 15px 25px; border: none; border-radius: 50px; cursor: pointer; margin: 5px; transition: background-color 0.3s ease, transform 0.2s; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+        .btn:hover { background-color: #9332b8; transform: translateY(-3px) scale(1.05); }
+        .jadwal { margin-top: 30px; background: #fff; padding: 25px; border-radius: 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.2); width: 320px; text-align: center; animation: fadeIn 0.5s ease-in-out; display: none; }
+        ul { padding-left: 20px; text-align: left; }
+        li { font-size: 16px; opacity: 0; transform: translateY(10px); animation: slideIn 0.5s forwards; animation-delay: var(--delay); margin-bottom: 5px; transition: all 0.3s ease; }
+        li:hover { background-color: #f1f1ff; padding-left: 5px; border-left: 3px solid #b36bff; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideIn { 0% { transform: translateY(10px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -151,8 +47,9 @@ TEMPLATE = """
 
     <div id="button-container">
         {% for hari in piket_per_hari %}
-            <button class="btn" onclick="showJadwal('{{ hari }}')"><span>{{ hari }}</span></button>
+            <button class="btn" onclick="showJadwal('{{ hari }}')">{{ hari }}</button>
         {% endfor %}
+        <a href="{{ url_for('add') }}" class="btn">Tambah Jadwal</a>
     </div>
 
     {% for hari, siswa_list in piket_per_hari.items() %}
@@ -160,38 +57,29 @@ TEMPLATE = """
         <h3>📅 Jadwal Piket Hari {{ hari }}</h3>
         <ul>
             {% for nama in siswa_list %}
-                <li>👩‍🎓 {{ nama }}</li>
+                <li style="--delay: {{ loop.index * 0.1 }}s;">👩‍🎓 {{ nama }} 
+                    <a href="{{ url_for('edit', hari=hari, nama=nama) }}">Edit</a> | 
+                    <a href="{{ url_for('delete', hari=hari, nama=nama) }}" style="color:red;">Delete</a>
+                </li>
             {% endfor %}
         </ul>
-        <button class="btn back-btn" onclick="kembali()"><span>⬅️ Kembali</span></button>
+        <a href="{{ url_for('index') }}" class="btn">⬅ Kembali</a>
     </div>
     {% endfor %}
 
     <script>
         function showJadwal(hari) {
             document.getElementById('button-container').style.display = 'none';
-
-            document.querySelectorAll('.jadwal').forEach(el => {
-                el.style.display = 'none';
-                el.style.opacity = 0;
-                el.style.transform = 'scale(0.95)';
-            });
-
-            const elemen = document.getElementById('jadwal-' + hari);
-            if (elemen) {
-                elemen.style.display = 'block';
-                setTimeout(() => {
-                    elemen.style.opacity = 1;
-                    elemen.style.transform = 'scale(1)';
-                }, 50);
-            }
-        }
-
-        function kembali() {
             document.querySelectorAll('.jadwal').forEach(el => {
                 el.style.display = 'none';
             });
-            document.getElementById('button-container').style.display = 'flex';
+            const jadwalElement = document.getElementById('jadwal-' + hari);
+            jadwalElement.style.display = 'block';
+            setTimeout(() => {
+                jadwalElement.querySelectorAll('li').forEach((item, index) => {
+                    item.style.animationDelay = index * 0.1 + 's';
+                });
+            }, 0);
         }
     </script>
 </body>
@@ -201,6 +89,138 @@ TEMPLATE = """
 @app.route('/')
 def index():
     return render_template_string(TEMPLATE, piket_per_hari=piket_per_hari)
+
+# TAMBAH
+@app.route('/add', methods=['GET', 'POST'])
+def add():
+    if request.method == 'POST':
+        hari = request.form['hari']
+        siswa_name = request.form['nama']
+        if siswa_name:
+            piket_per_hari[hari].append(siswa_name)
+            save_data()
+        return redirect(url_for('index'))
+    
+    return render_template_string("""
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+        <meta charset="UTF-8">
+        <title>Tambah Jadwal Piket</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', sans-serif;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+                min-height: 100vh;
+                margin: 0;
+                background: linear-gradient(135deg, #d4bfff, #fbeaff);
+                animation: fadeIn 0.5s ease-in-out;
+            }
+            h3 { color: #5c2a9d; margin-bottom: 20px; animation: fadeInDown 0.6s ease-out; }
+            .form {
+                background: #fff;
+                padding: 30px;
+                border-radius: 20px;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+                width: 320px;
+                text-align: center;
+                animation: fadeInUp 0.6s ease-out;
+            }
+            .form input, .form button, .form select {
+                padding: 10px;
+                font-size: 16px;
+                width: 90%;
+                margin: 10px 0;
+                border-radius: 8px;
+                border: 1px solid #ccc;
+                transition: all 0.3s ease;
+            }
+            .form input:focus, .form select:focus {
+                outline: none;
+                border-color: #b36bff;
+                box-shadow: 0 0 5px #b36bff;
+            }
+            .form button {
+                background-color: #5c2a9d;
+                color: white;
+                border: none;
+                width: 100%;
+                cursor: pointer;
+                margin-top: 10px;
+            }
+            .form button:hover {
+                background-color: #3c1a6d;
+            }
+            .btn-back {
+                margin-top: 20px;
+                background-color: #b36bff;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 50px;
+                text-decoration: none;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+                transition: background-color 0.3s ease, transform 0.2s;
+            }
+            .btn-back:hover {
+                background-color: #9332b8;
+                transform: translateY(-3px) scale(1.05);
+            }
+            @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        </style>
+    </head>
+    <body>
+        <h3>📝 Tambah Jadwal Piket</h3>
+        <form method="POST" class="form">
+            <label for="hari">Pilih Hari:</label><br>
+            <select name="hari" id="hari" required>
+                <option value="Selasa">Selasa</option>
+                <option value="Rabu">Rabu</option>
+                <option value="Kamis">Kamis</option>
+                <option value="Jumat">Jumat</option>
+            </select><br>
+            <label for="nama">Nama Siswa:</label><br>
+            <input type="text" name="nama" id="nama" required><br>
+            <button type="submit">Tambah</button>
+        </form>
+        <a href="{{ url_for('index') }}" class="btn-back">⬅ Kembali</a>
+    </body>
+    </html>
+    """)
+
+# EDIT
+@app.route('/edit/<hari>/<nama>', methods=['GET', 'POST'])
+def edit(hari, nama):
+    if request.method == 'POST':
+        new_name = request.form['nama']
+        if new_name:
+            index = piket_per_hari[hari].index(nama)
+            piket_per_hari[hari][index] = new_name
+            save_data()
+        return redirect(url_for('index'))
+
+    return render_template_string("""
+        <h3>Edit Jadwal Piket</h3>
+        <form method="POST" class="form">
+            <label for="nama">Nama Siswa:</label>
+            <input type="text" name="nama" value="{{ nama }}" required><br><br>
+            <button type="submit">Update</button>
+        </form>
+        <a href="{{ url_for('index') }}" class="btn-back">⬅ Kembali</a>
+    """, nama=nama)
+
+# DELETE
+@app.route('/delete/<hari>/<nama>', methods=['GET'])
+def delete(hari, nama):
+    if nama in piket_per_hari[hari]:
+        piket_per_hari[hari].remove(nama)
+        save_data()
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)

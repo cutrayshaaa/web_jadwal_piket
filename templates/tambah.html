@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Tambah Jadwal Piket</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to bottom right, #c084fc, #a78bfa);
+            color: #2c2c2c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px 40px;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            animation: fadeIn 1s ease-in-out;
+        }
+        h2 {
+            text-align: center;
+            color: #6b21a8;
+            margin-bottom: 25px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 10px;
+        }
+        select, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #d8b4fe;
+            border-radius: 10px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #9333ea;
+            box-shadow: 0 0 8px #c084fc;
+        }
+        .btn-tambah {
+            background-color: #a855f7;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: 0.3s ease-in-out;
+            width: 100%;
+        }
+        .btn-tambah:hover {
+            background-color: #9333ea;
+            transform: scale(1.05);
+        }
+        .kembali {
+            display: inline-block;
+            margin-top: 15px;
+            color: #6b21a8;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .kembali:hover {
+            text-decoration: underline;
+            color: #4c1d95;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(-10px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>➕ Tambah Jadwal Piket</h2>
+        <form method="POST">
+            <label for="day">Pilih Hari:</label>
+            <select name="day" id="day" required>
+                <option value="Senin">Senin</option>
+                <option value="Selasa">Selasa</option>
+                <option value="Rabu">Rabu</option>
+                <option value="Kamis">Kamis</option>
+                <option value="Jumat">Jumat</option>
+            </select>
+            <label for="student">Nama Siswa:</label>
+            <input type="text" name="student" id="student" placeholder="Masukkan nama siswa" required>
+            <button type="submit" class="btn-tambah">Tambah</button>
+        </form>
+        <a href="/" class="kembali">← Kembali</a>
+    </div>
+</body>
+</html>
